@@ -51,36 +51,43 @@ public class DisableGrenadesPatch : ModulePatch
 {
     protected override MethodBase GetTargetMethod()
     {
-        return AccessTools.Method(typeof(BotGrenadeToPortal), nameof(BotGrenadeToPortal.method_0));
+        return AccessTools.PropertyGetter(typeof(BotGrenadeController), nameof(BotGrenadeController.HaveGrenade));
     }
 
-    [PatchPrefix]
-    public static bool Patch(BotGrenadeToPortal __instance)
+    [PatchPostfix]
+    public static void Patch(BotGrenadeController __instance, ref bool __result)
     {
+        if (!__result)
+        {
+            return;
+        }
+
         var settings = GlobalSettingsClass.Instance.General;
         if (!settings.BotsUseGrenades)
         {
-            return false;
+            __result = false;
+            return;
         }
 
         if (SAINEnableClass.GetSAIN(__instance.BotOwner_0.ProfileId, out BotComponent bot))
         {
             if (!bot.Info.FileSettings.Core.CanGrenade)
             {
-                return false;
+                __result = false;
+                return;
             }
 
             var goalEnemy = bot.EnemyController.GoalEnemy;
             if (goalEnemy == null)
             {
-                return false;
+                __result = false;
+                return;
             }
 
             if (!settings.BotVsBotGrenade && goalEnemy.IsAI)
             {
-                return false;
+                __result = false;
             }
         }
-        return true;
     }
 }
