@@ -24,7 +24,7 @@ public static class AssemblyInfoClass
 
     public const string SAINGUID = "me.sol.sain";
     public const string SAINName = "SAIN";
-    public const string SAINVersion = "4.4.2";
+    public const string SAINVersion = "4.4.3";
     public const string SAINPresetVersion = "4.4.0";
 
     public const string SPTVersion = "4.0.0";
@@ -35,6 +35,7 @@ public static class AssemblyInfoClass
     public const string QuestingBotsGUID = "com.DanW.QuestingBots";
     public const string FikaGUID = "com.fika.core";
     public const string FikaHeadlessGUID = "com.fika.headless";
+    public const string LootingBotsGUID = "me.skwizzy.lootingbots";
 
     public const string BigBrainGUID = "xyz.drakia.bigbrain";
     public const string BigBrainVersion = "1.4.0";

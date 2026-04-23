@@ -1,6 +1,7 @@
 ﻿using Comfort.Common;
 using DrakiaXYZ.BigBrain.Brains;
 using EFT;
+using EFT.HealthSystem;
 using EFT.Interactive;
 using SAIN.Components;
 using SAIN.Components.BotController;
@@ -243,7 +244,16 @@ internal class ExtractAction(BotOwner bot) : BotAction(bot, "Extract"), IBotActi
                 Bot.Memory.Extract.ExfilPoint
             );
 
-            Singleton<IBotGame>.Instance.BotDespawn(BotOwner);
+            // For robustness, set HealthController.IsAlive to false.
+            // For some reason, not all EnemyInfo for this bot is removed from other bots. Causing problems for HaveSeenEnemyPatch,
+            // and maybe other places too.
+            if (BotOwner.GetPlayer.HealthController is ActiveHealthController healthController)
+            {
+                healthController.IsAlive = false;
+            }
+
+            // Call RemoveFromMap, used by BSG's Exfil layer
+            BotOwner.LeaveData.RemoveFromMap();
         }
     }
 
