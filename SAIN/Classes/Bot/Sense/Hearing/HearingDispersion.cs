@@ -153,7 +153,7 @@ public class HearingDispersion(HearingSensor hearingSensor) : BotSubClass<Hearin
                 continue; // No valid point found
             }
             _randomNavMeshPath.ClearCorners();
-            if (!NavMesh.CalculatePath(origin, hit.position, -1, ))
+            if (!NavMesh.CalculatePath(origin, hit.position, -1, _randomNavMeshPath))
             {
 #if DEBUG
                 Logger.LogDebug($"Failed nav path");
