@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace SAIN.SAINComponent.Classes;
 
-public class HearingInputClass : BotSubClass<SAINHearingSensorClass>, IBotClass
+public class HearingInputClass(SAINHearingSensorClass hearing) : BotSubClass<SAINHearingSensorClass>(hearing), IBotClass
 {
     private const float BOT_DEAF_TIME_INTERVAL = 0.75f;
     private const float DeafenCoef_Gunfire = 0.33f;
@@ -23,27 +23,15 @@ public class HearingInputClass : BotSubClass<SAINHearingSensorClass>, IBotClass
     private const float IMPACT_MAX_HEAR_DISTANCE = 50f * 50f;
     private const float IMPACT_DISPERSION = 5f * 5f;
 
-    private bool IgnoreUnderFire = false;
-    private bool IgnoreHearing = false;
+    private bool _ignoreUnderFire = false;
+    private bool _ignoreHearing = false;
+
+    private float _botDeafenedUntilTime = -1f;
 
     public bool IsBotDeafened
     {
-        get
-        {
-            if (_BotDeafedTime > 0)
-            {
-                if (_BotDeafedTime < Time.time)
-                {
-                    return true;
-                }
-                _BotDeafedTime = -1;
-            }
-            return false;
-        }
+        get { return Time.time < _botDeafenedUntilTime; }
     }
-
-    public HearingInputClass(SAINHearingSensorClass hearing)
-        : base(hearing) { }
 
     public override void Init()
     {
@@ -69,7 +57,7 @@ public class HearingInputClass : BotSubClass<SAINHearingSensorClass>, IBotClass
 
     public override void ManualUpdate()
     {
-        checkResetHearing();
+        CheckResetHearing();
         base.ManualUpdate();
     }
 
@@ -91,7 +79,7 @@ public class HearingInputClass : BotSubClass<SAINHearingSensorClass>, IBotClass
         {
             return true;
         }
-        if (IgnoreHearing && (IgnoreUnderFire || !includingGunfire))
+        if (_ignoreHearing && (_ignoreUnderFire || !includingGunfire))
         {
             return true;
         }
@@ -137,60 +125,86 @@ public class HearingInputClass : BotSubClass<SAINHearingSensorClass>, IBotClass
     {
         UnityEngine.Profiling.Profiler.BeginSample("Process Sounds For Bots");
 
-        bool DeafeningShot = false;
-        bool AlreadyDeafened = IsBotDeafened;
+        bool wasDeafened = IsBotDeafened;
+        bool deafeningSoundHeard = false;
 
         // Process gunshots first, since they can trigger a bot to be deaf to other sounds
         if (
             AISoundCachedEvents_Gunshots.Count > 0
-            && ProcessGunshots(AISoundCachedEvents_Gunshots, false, DeafenCoef_Gunfire, SoundDataToReactTo)
+            && ProcessGunshots(AISoundCachedEvents_Gunshots, wasDeafened, DeafenCoef_Gunfire, SoundDataToReactTo)
         )
         {
-            DeafeningShot = true;
-            AlreadyDeafened = true;
+            deafeningSoundHeard = true;
+            wasDeafened = true;
         }
 
         if (
             AISoundCachedEvents_Gunshots_Suppressed.Count > 0
-            && ProcessGunshots(AISoundCachedEvents_Gunshots_Suppressed, AlreadyDeafened, DeafenCoef_Suppressed, SoundDataToReactTo)
+            && ProcessGunshots(AISoundCachedEvents_Gunshots_Suppressed, wasDeafened, DeafenCoef_Suppressed, SoundDataToReactTo)
         )
         {
-            DeafeningShot = true;
-            AlreadyDeafened = true;
+            deafeningSoundHeard = true;
+            wasDeafened = true;
         }
 
         // Process most sounds if we aren't deafened
         if (AISoundCachedEvents_Conversations.Count > 0)
         {
-            ProcessSounds(AISoundCachedEvents, AlreadyDeafened, DeafenCoef_Convo, SoundDataToReactTo);
+            ProcessSounds(AISoundCachedEvents_Conversations, wasDeafened, DeafenCoef_Convo, SoundDataToReactTo);
         }
+
         if (AISoundCachedEvents.Count > 0)
         {
-            ProcessSounds(AISoundCachedEvents, AlreadyDeafened, DeafenCoef_Generic, SoundDataToReactTo);
+            ProcessSounds(AISoundCachedEvents, wasDeafened, DeafenCoef_Generic, SoundDataToReactTo);
         }
 
-        bool SoundRemoved = false;
-        for (int i = SoundDataToReactTo.Count - 1; i >= 0; i--)
-        {
-            if (SoundDataToReactTo[i].CanReport(0.2f))
-            {
-                TryReactToSound(SoundDataToReactTo[i]);
-                SoundDataToReactTo.RemoveAt(i);
-                SoundRemoved = true;
-            }
-        }
+        ProcessSoundReactions();
 
-        if (SoundRemoved)
+        if (deafeningSoundHeard)
         {
-            SoundDataToReactTo.TrimExcess();
-        }
-
-        if (DeafeningShot)
-        {
-            _BotDeafedTime = Time.time + BOT_DEAF_TIME_INTERVAL;
+            DeafenBot(BOT_DEAF_TIME_INTERVAL);
         }
 
         UnityEngine.Profiling.Profiler.EndSample();
+    }
+
+    private void ProcessSoundReactions()
+    {
+        bool soundRemoved = false;
+
+        for (int i = SoundDataToReactTo.Count - 1; i >= 0; i--)
+        {
+            AISoundData sound = SoundDataToReactTo[i];
+
+            if (!sound.CanReport(0.2f))
+            {
+                continue;
+            }
+
+            TryReactToSound(sound);
+            SoundDataToReactTo.RemoveAt(i);
+            soundRemoved = true;
+        }
+
+        if (soundRemoved)
+        {
+            SoundDataToReactTo.TrimExcess();
+        }
+    }
+
+    private void DeafenBot(float duration)
+    {
+        if (duration <= 0f)
+        {
+            return;
+        }
+
+        float deafenedUntilTime = Time.time + duration;
+
+        if (deafenedUntilTime > _botDeafenedUntilTime)
+        {
+            _botDeafenedUntilTime = deafenedUntilTime;
+        }
     }
 
     private void TryReactToSound(AISoundData Sound)
@@ -204,8 +218,6 @@ public class HearingInputClass : BotSubClass<SAINHearingSensorClass>, IBotClass
             OnFriendlySoundHeard?.Invoke(Sound);
         }
     }
-
-    private float _BotDeafedTime = -1;
 
     private static bool ProcessSounds(List<AISoundData> Sounds, bool PreviouslyDeaf, float DeafenCoef, List<AISoundData> Results)
     {
@@ -265,27 +277,27 @@ public class HearingInputClass : BotSubClass<SAINHearingSensorClass>, IBotClass
         return DeafeningShot;
     }
 
-    private void checkResetHearing()
+    private void CheckResetHearing()
     {
-        if (!IgnoreHearing)
+        if (!_ignoreHearing)
         {
-            if (IgnoreUnderFire)
+            if (_ignoreUnderFire)
             {
-                IgnoreUnderFire = false;
+                _ignoreUnderFire = false;
             }
 
             return;
         }
         if (_ignoreUntilTime > 0 && _ignoreUntilTime < Time.time)
         {
-            IgnoreHearing = false;
-            IgnoreUnderFire = false;
+            _ignoreHearing = false;
+            _ignoreUnderFire = false;
             return;
         }
         if (Bot.EnemyController.VisibleEnemies.Count > 0)
         {
-            IgnoreHearing = false;
-            IgnoreUnderFire = false;
+            _ignoreHearing = false;
+            _ignoreUnderFire = false;
             return;
         }
     }
@@ -392,8 +404,8 @@ public class HearingInputClass : BotSubClass<SAINHearingSensorClass>, IBotClass
             }
         }
 
-        IgnoreUnderFire = ignoreUnderFire;
-        IgnoreHearing = value;
+        _ignoreUnderFire = ignoreUnderFire;
+        _ignoreHearing = value;
         if (value && duration > 0f)
         {
             _ignoreUntilTime = Time.time + duration;
