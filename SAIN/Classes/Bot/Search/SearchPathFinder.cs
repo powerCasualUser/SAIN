@@ -1,24 +1,11 @@
-﻿using SAIN.Models.Structs;
+﻿using SAIN.SAINComponent;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace SAIN.SAINComponent.Classes.Search;
+namespace SAIN.Classes.Bot.Search;
 
-public enum EPathCalcFailReason
-{
-    None,
-    NullDestination,
-    NoTarget,
-    NullPlace,
-    TooClose,
-    SampleStart,
-    SampleEnd,
-    CalcPath,
-    LastCorner,
-}
-
-public class SearchPathFinder : BotSubClass<SAINSearchClass>
+public class SearchPathFinder : BotSubClass<SearchClass>
 {
     public EnemyPlace TargetPlace { get; private set; }
     public bool SearchedTargetPosition
@@ -28,7 +15,7 @@ public class SearchPathFinder : BotSubClass<SAINSearchClass>
 
     public bool FinishedPeeking { get; set; }
 
-    public SearchPathFinder(SAINSearchClass searchClass)
+    public SearchPathFinder(SearchClass searchClass)
         : base(searchClass)
     {
         CanEverTick = false;
@@ -49,10 +36,6 @@ public class SearchPathFinder : BotSubClass<SAINSearchClass>
         if (_nextCheckPosTime < Time.time || SearchedTargetPosition || TargetPlace == null)
         {
             _nextCheckPosTime = Time.time + 4f;
-            if (!CheckEnemyPath(enemy, out string failReason))
-            {
-                //Logger.LogDebug($"Failed to calc path during search for reason: [{failReason}]");
-            }
         }
     }
 
@@ -130,7 +113,7 @@ public class SearchPathFinder : BotSubClass<SAINSearchClass>
 
         if (
             (destination - lastKnownPlace.Position).sqrMagnitude > 0.5f
-            && Physics.SphereCast(destination + Vector3.up, 0.1f, lastKnownPlace.Position - destination, out RaycastHit hit, 1f)
+            && Physics.SphereCast(destination + Vector3.up, 0.1f, lastKnownPlace.Position - destination, out _, 1f)
         )
         {
             failReason = "path not complete";

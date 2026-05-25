@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using DrakiaXYZ.BigBrain.Brains;
 using EFT;
+using SAIN.Models.Enums;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -27,10 +28,7 @@ internal class RunningAction(BotOwner bot) : BotAction(bot, nameof(RunningAction
             return;
         }
 
-        if (
-            findRandomPlace(out var path)
-            && Bot.Mover.RunToPoint(_runDestination, false, -1, SAINComponent.Classes.Mover.ESprintUrgency.High, true)
-        )
+        if (findRandomPlace(out var path) && Bot.Mover.RunToPoint(_runDestination, false, -1, ESprintUrgency.High, true))
         {
             nextRandomRunTime = Time.time + 20f;
         }

@@ -137,7 +137,6 @@ public class FlashLightDazzleClass : BotBase
 
     private float GetDazzleModifier(Enemy enemy)
     {
-        float enemyDist = enemy.RealDistance;
         float max = MaxDazzleRange;
         float min = max / 2f;
 

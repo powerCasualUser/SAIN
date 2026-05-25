@@ -10,15 +10,13 @@ namespace SAIN.SAINComponent.Classes.WeaponFunction;
 
 public class Firerate(BotWeaponInfoClass weaponInfoClass)
 {
-    private readonly BotWeaponInfoClass WeaponInfo = weaponInfoClass;
-
     public float CalcFirerateInterval()
     {
-        float targetDistance = WeaponInfo.Bot.DistanceToAimTarget;
-        float perMeterWait = GetPerMeter(WeaponInfo.EWeaponClass);
-        float shootModifier = WeaponInfo.FinalModifier;
-        EFireMode firemode = WeaponInfo.CurrentWeapon.FireMode.FireMode;
-        float modifier = WeaponInfo.Bot.Info.FileSettings.Shoot.FireratMulti;
+        float targetDistance = weaponInfoClass.Bot.DistanceToAimTarget;
+        float perMeterWait = GetPerMeter(weaponInfoClass.EWeaponClass);
+        float shootModifier = weaponInfoClass.FinalModifier;
+        EFireMode firemode = weaponInfoClass.CurrentWeapon.FireMode.FireMode;
+        float modifier = weaponInfoClass.Bot.Info.FileSettings.Shoot.FireratMulti;
         return SemiAutoROF(targetDistance, firemode, perMeterWait, shootModifier, modifier);
     }
 

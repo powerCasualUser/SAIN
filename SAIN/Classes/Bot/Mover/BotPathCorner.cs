@@ -1,4 +1,5 @@
 ﻿using SAIN.Models.Direction;
+using SAIN.Models.Enums;
 using SAIN.Models.PlayerData;
 using UnityEngine;
 

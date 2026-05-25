@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using EFT;
 using SAIN.Components;
 using SAIN.Helpers;
+using SAIN.Models.Enums;
 using SAIN.Preset.GlobalSettings;
 using UnityEngine;
 using UnityEngine.AI;

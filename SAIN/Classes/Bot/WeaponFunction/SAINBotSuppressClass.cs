@@ -136,8 +136,8 @@ public class SAINBotSuppressClass : BotComponentClassBase
         if (
             Bot.Mover.Running
             && (
-                Bot.Mover.ActivePath.CurrentSprintStatus == Mover.EBotSprintStatus.Running
-                || Bot.Mover.ActivePath.CurrentSprintStatus == Mover.EBotSprintStatus.Turning
+                Bot.Mover.ActivePath.CurrentSprintStatus == EBotSprintStatus.Running
+                || Bot.Mover.ActivePath.CurrentSprintStatus == EBotSprintStatus.Turning
             )
         )
         {
@@ -227,7 +227,7 @@ public class SAINBotSuppressClass : BotComponentClassBase
             return 0f;
         }
         currentAmmoCount = weaponManager.Reload.BulletCount;
-        return (float) currentAmmoCount / weaponManager.Reload.MaxBulletCount;
+        return (float)currentAmmoCount / weaponManager.Reload.MaxBulletCount;
     }
 
     public float TimeSinceSeenToSuppress

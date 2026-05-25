@@ -1,6 +1,7 @@
 ﻿using System;
 using EFT;
 using SAIN.Components;
+using SAIN.Models.Enums;
 using SAIN.Models.PlayerData;
 using SAIN.SAINComponent.SubComponents.CoverFinder;
 using UnityEngine;

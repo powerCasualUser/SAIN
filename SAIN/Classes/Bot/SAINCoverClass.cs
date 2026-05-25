@@ -4,6 +4,7 @@ using EFT;
 using SAIN.Components;
 using SAIN.Components.CoverFinder;
 using SAIN.Helpers;
+using SAIN.Models.Enums;
 using SAIN.Preset.GlobalSettings;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using SAIN.SAINComponent.SubComponents.CoverFinder;
@@ -101,7 +102,7 @@ public class SAINCoverClass : BotComponentClassBase
         for (int i = 0; i < _coverPoints.Count; i++)
         {
             CoverPoint coverPoint = _coverPoints[i];
-            if (Bot.Mover.GoToCoverPoint(coverPoint, _shallSprint, Mover.ESprintUrgency.High))
+            if (Bot.Mover.GoToCoverPoint(coverPoint, _shallSprint, ESprintUrgency.High))
             {
                 return coverPoint;
             }
@@ -194,7 +195,7 @@ public class SAINCoverClass : BotComponentClassBase
             //if (!CoverInUse.CoverData.IsBad && CoverPoints.Contains(CoverInUse))
             if (!CoverInUse.CoverData.IsBad)
             {
-                Bot.Mover.GoToCoverPoint(CoverInUse, false, Mover.ESprintUrgency.High);
+                Bot.Mover.GoToCoverPoint(CoverInUse, false, ESprintUrgency.High);
                 _shallSprint = false;
                 SetCoverSeekingState(ECoverSeekingState.HoldInCover);
                 return;
@@ -207,11 +208,11 @@ public class SAINCoverClass : BotComponentClassBase
         {
             if (_shallSprint)
             {
-                Bot.Mover.ActivePath?.RequestStartSprint(Mover.ESprintUrgency.High, $"runToCover, {reason}");
+                Bot.Mover.ActivePath?.RequestStartSprint(ESprintUrgency.High, $"runToCover, {reason}");
             }
             else
             {
-                Bot.Mover.ActivePath?.RequestEndSprint(Mover.ESprintUrgency.High, $"noRunToCover, {reason}");
+                Bot.Mover.ActivePath?.RequestEndSprint(ESprintUrgency.High, $"noRunToCover, {reason}");
             }
 
             var pathStatus = CoverPoint_MovingTo.PathDistanceStatus;
@@ -224,7 +225,7 @@ public class SAINCoverClass : BotComponentClassBase
                 SetCoverSeekingState(ECoverSeekingState.HoldInCover);
                 return;
             }
-            if (CoverPoint_MovingTo != null && Bot.Mover.GoToCoverPoint(CoverPoint_MovingTo, _shallSprint, Mover.ESprintUrgency.High))
+            if (CoverPoint_MovingTo != null && Bot.Mover.GoToCoverPoint(CoverPoint_MovingTo, _shallSprint, ESprintUrgency.High))
             {
                 SetCoverSeekingState(ECoverSeekingState.MoveTo);
                 return;
@@ -314,7 +315,7 @@ public class SAINCoverClass : BotComponentClassBase
 
     private bool CheckMoveToCover(CoverPoint coverPoint, bool sprint)
     {
-        if (coverPoint != null && !coverPoint.CoverData.IsBad && Bot.Mover.GoToCoverPoint(coverPoint, sprint, Mover.ESprintUrgency.High))
+        if (coverPoint != null && !coverPoint.CoverData.IsBad && Bot.Mover.GoToCoverPoint(coverPoint, sprint, ESprintUrgency.High))
         {
             return true;
         }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using EFT;
+using SAIN.Classes.Bot.Search;
 using SAIN.Classes.Bot.Sense.Hearing;
 using SAIN.Components.PlayerComponentSpace;
 using SAIN.Layers;
@@ -15,7 +16,6 @@ using SAIN.SAINComponent.Classes.EnemyClasses;
 using SAIN.SAINComponent.Classes.Info;
 using SAIN.SAINComponent.Classes.Memory;
 using SAIN.SAINComponent.Classes.Mover;
-using SAIN.SAINComponent.Classes.Search;
 using SAIN.SAINComponent.Classes.Talk;
 using SAIN.SAINComponent.Classes.WeaponFunction;
 using UnityEngine;
@@ -115,7 +115,6 @@ public class BotComponent : BotComponentBase, ISPlayer
     }
 
     public BotGlobalEventsClass GlobalEvents { get; private set; }
-    public BotBusyHandsDetector BusyHandsDetector { get; private set; }
     public SAINShootData Shoot { get; private set; }
     public BotWeightManagement WeightManagement { get; private set; }
     public SAINBotMedicalClass Medical { get; private set; }
@@ -130,7 +129,7 @@ public class BotComponent : BotComponentBase, ISPlayer
     public SAINAILimit AILimit { get; private set; }
     public SAINBotSuppressClass Suppression { get; private set; }
     public SAINVaultClass Vault { get; private set; }
-    public SAINSearchClass Search { get; private set; }
+    public SearchClass Search { get; private set; }
     public SAINMemoryClass Memory { get; private set; }
     public SAINEnemyController EnemyController { get; private set; }
     public SAINFriendlyFireClass FriendlyFire { get; private set; }
@@ -258,7 +257,6 @@ public class BotComponent : BotComponentBase, ISPlayer
             Info = new SAINBotInfoClass(this);
 
             Squad = new BotSquadContainer(this);
-            BusyHandsDetector = new BotBusyHandsDetector(this);
             GlobalEvents = new BotGlobalEventsClass(this);
             Shoot = new SAINShootData(this);
             WeightManagement = new BotWeightManagement(this);
@@ -275,7 +273,7 @@ public class BotComponent : BotComponentBase, ISPlayer
             EnemyController = new SAINEnemyController(this);
             FriendlyFire = new SAINFriendlyFireClass(this);
             Vision = new SAINVisionClass(this);
-            Search = new SAINSearchClass(this);
+            Search = new SearchClass(this);
             Vault = new SAINVaultClass(this);
             Suppression = new SAINBotSuppressClass(this);
             AILimit = new SAINAILimit(this);

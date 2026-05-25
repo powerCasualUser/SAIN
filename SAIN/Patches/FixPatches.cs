@@ -5,9 +5,9 @@ using EFT;
 using HarmonyLib;
 using SAIN.Components;
 using SAIN.Extensions;
+using SAIN.Models.Enums;
 using SAIN.Preset.GlobalSettings;
 using SAIN.SAINComponent.Classes.EnemyClasses;
-using SAIN.SAINComponent.Classes.Mover;
 using SPT.Reflection.Patching;
 using UnityEngine;
 
@@ -100,7 +100,7 @@ internal class RunToEnemyUpdatePatch : ModulePatch
                     }
                     else
                     {
-                        bot.Mover.RunToPoint(goalEnemy.CurrPosition, true, -1, SAINComponent.Classes.Mover.ESprintUrgency.High, true);
+                        bot.Mover.RunToPoint(goalEnemy.CurrPosition, true, -1, ESprintUrgency.High, true);
                     }
                 }
             }
@@ -117,7 +117,7 @@ internal class RunToEnemyUpdatePatch : ModulePatch
                 }
                 else
                 {
-                    bot.Mover.RunToPoint(goalEnemy.CurrPosition, true, -1, SAINComponent.Classes.Mover.ESprintUrgency.High, true);
+                    bot.Mover.RunToPoint(goalEnemy.CurrPosition, true, -1, ESprintUrgency.High, true);
                 }
             }
             return false;

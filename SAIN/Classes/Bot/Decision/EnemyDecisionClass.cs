@@ -470,7 +470,7 @@ public class EnemyDecisionClass : BotBase
 
     private bool shallSearch(Enemy enemy, out string reason)
     {
-        bool shallSearch = Bot.Search.SearchDecider.ShallStartSearch(enemy, out SearchReasonsStruct reasons);
+        bool shallSearch = Bot.Search.Decider.ShallStartSearch(enemy, out SearchReasonsStruct reasons);
         DebugSearchReasons = reasons;
         DebugShallSearch = shallSearch;
         if (shallSearch)

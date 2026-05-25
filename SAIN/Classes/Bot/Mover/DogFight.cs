@@ -1,6 +1,7 @@
 ﻿using EFT;
 using SAIN.Components;
 using SAIN.Helpers;
+using SAIN.Models.Enums;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using UnityEngine;
 using UnityEngine.AI;

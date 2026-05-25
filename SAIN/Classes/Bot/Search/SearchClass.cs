@@ -1,15 +1,15 @@
 ﻿using EFT;
 using SAIN.Components;
 using SAIN.Models.Enums;
-using SAIN.Models.Structs;
 using SAIN.Preset.Personalities;
+using SAIN.SAINComponent;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace SAIN.SAINComponent.Classes.Search;
+namespace SAIN.Classes.Bot.Search;
 
-public class SAINSearchClass : BotComponentClassBase
+public class SearchClass : BotComponentClassBase
 {
     public bool SearchActive { get; private set; }
     public Enemy SearchTarget { get; private set; }
@@ -18,14 +18,28 @@ public class SAINSearchClass : BotComponentClassBase
     public ESearchMove CurrentState { get; private set; }
     public ESearchMove LastState { get; private set; }
 
-    public SearchDeciderClass SearchDecider { get; private set; }
+    public SearchDecider Decider { get; private set; }
     public SearchPathFinder PathFinder { get; private set; }
 
-    public SAINSearchClass(BotComponent sain)
+    private bool _Running
+    {
+        get { return Bot.Mover.Running; }
+    }
+
+    private float _waitAtPointTimer = -1;
+    private float _advanceTime = -1f;
+    private float _timeLastMoved = float.NegativeInfinity;
+
+    private PersonalitySearchSettings _searchSettings
+    {
+        get { return Bot.Info.PersonalitySettings.Search; }
+    }
+
+    public SearchClass(BotComponent sain)
         : base(sain)
     {
         CanEverTick = false;
-        SearchDecider = new SearchDeciderClass(this);
+        Decider = new SearchDecider(this);
         PathFinder = new SearchPathFinder(this);
     }
 
@@ -93,7 +107,7 @@ public class SAINSearchClass : BotComponentClassBase
             return true;
         }
 
-        if (shallSprint && Bot.Mover.RunToPointByWay(enemy.Path.PathToEnemy, false, 1f, Mover.ESprintUrgency.Middle, true))
+        if (shallSprint && Bot.Mover.RunToPointByWay(enemy.Path.PathToEnemy, false, 1f, ESprintUrgency.Middle, true))
         {
             _timeLastMoved = Time.time;
             return true;
@@ -105,8 +119,6 @@ public class SAINSearchClass : BotComponentClassBase
         }
         return false;
     }
-
-    private float _timeLastMoved;
 
     private void HandleLight(bool stealthy)
     {
@@ -140,15 +152,15 @@ public class SAINSearchClass : BotComponentClassBase
             CurrentState = ESearchMove.None;
         }
 
-        bool shallBeStealthy = SearchDecider.ShallBeStealthyDuringSearch(enemy);
-        GetSpeedandPose(out float speed, out float pose, shallSprint, shallBeStealthy);
+        bool shallBeStealthy = Decider.ShallBeStealthyDuringSearch(enemy);
+        GetSpeedAndPose(out float speed, out float pose, shallSprint, shallBeStealthy);
         HandleLight(shallBeStealthy);
 
         if (CheckShallWaitandReload())
         {
             shallSprint = false;
         }
-        if (shallSprint && Bot.Mover.RunToPointByWay(enemy.Path.PathToEnemy, true, -1, Mover.ESprintUrgency.Middle, true))
+        if (shallSprint && Bot.Mover.RunToPointByWay(enemy.Path.PathToEnemy, true, -1, ESprintUrgency.Middle, true))
         {
             LastState = CurrentState;
             CurrentState = ESearchMove.DirectMove;
@@ -246,20 +258,23 @@ public class SAINSearchClass : BotComponentClassBase
         }
     }
 
-    private void GetSpeedandPose(out float speed, out float pose, bool sprinting, bool stealthy)
+    private void GetSpeedAndPose(out float speed, out float pose, bool sprinting, bool stealthy)
     {
         speed = 1f;
         pose = 1f;
+
         // are we sprinting?
         if (sprinting || Player.IsSprintEnabled || _Running || Bot.Mover.Running)
         {
             return;
         }
+
         // are we indoors?
         if (GetIndoorsSpeedPose(stealthy, out speed, out pose))
         {
             return;
         }
+
         // we are outside...
         if (_searchSettings.Sneaky && Bot.Cover.CoverPoints.Count > 2 && Time.time - BotOwner.Memory.UnderFireTime > 30f)
         {
@@ -267,6 +282,7 @@ public class SAINSearchClass : BotComponentClassBase
             pose = 0.6f;
             return;
         }
+
         if (stealthy)
         {
             speed = 0.5f;
@@ -308,11 +324,6 @@ public class SAINSearchClass : BotComponentClassBase
         return false;
     }
 
-    private bool ShallStartPeek(bool shallSprint)
-    {
-        return false;
-    }
-
     private void SetSpeedPose(float speed, float pose)
     {
         Bot.Mover.SetTargetMoveSpeed(speed);
@@ -323,6 +334,12 @@ public class SAINSearchClass : BotComponentClassBase
     {
         ResetStates();
         PathFinder.Reset();
+
+        _waitAtPointTimer = -1f;
+        _advanceTime = -1f;
+        _timeLastMoved = float.NegativeInfinity;
+
+        Bot.Mover.ActivePath?.UnPause();
     }
 
     public void ResetStates()
@@ -340,17 +357,5 @@ public class SAINSearchClass : BotComponentClassBase
     public float DistanceToDestination(Vector3 point)
     {
         return (point - Bot.Position).magnitude;
-    }
-
-    private bool _Running
-    {
-        get { return Bot.Mover.Running; }
-    }
-
-    private float _waitAtPointTimer = -1;
-    private float _advanceTime;
-    private PersonalitySearchSettings _searchSettings
-    {
-        get { return Bot.Info.PersonalitySettings.Search; }
     }
 }

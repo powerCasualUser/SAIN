@@ -1,6 +1,7 @@
 ﻿using EFT;
 using EFT.InventoryLogic;
 using SAIN.Components;
+using SAIN.Models.Enums;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using SAIN.SAINComponent.Classes.Info;
 using UnityEngine;
@@ -105,8 +106,8 @@ public class SAINShootData : BotComponentClassBase
         if (
             Bot.Mover.Running
             && (
-                Bot.Mover.ActivePath.CurrentSprintStatus == Mover.EBotSprintStatus.Running
-                || Bot.Mover.ActivePath.CurrentSprintStatus == Mover.EBotSprintStatus.Turning
+                Bot.Mover.ActivePath.CurrentSprintStatus == EBotSprintStatus.Running
+                || Bot.Mover.ActivePath.CurrentSprintStatus == EBotSprintStatus.Turning
             )
         )
         {

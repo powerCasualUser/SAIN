@@ -143,7 +143,7 @@ public class AimDownSightsController : BotComponentClassBase
 
     public EAimDownSightsStatus GetADSStatus(Vector3 targetPosition, Enemy enemy)
     {
-        if (Bot.Mover.ActivePath?.Status == Mover.EBotMoveStatus.DoorInteraction)
+        if (Bot.Mover.ActivePath?.Status == EBotMoveStatus.DoorInteraction)
         {
             return EAimDownSightsStatus.None;
         }

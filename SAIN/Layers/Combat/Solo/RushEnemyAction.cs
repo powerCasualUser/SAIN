@@ -1,5 +1,6 @@
 ﻿using DrakiaXYZ.BigBrain.Brains;
 using EFT;
+using SAIN.Models.Enums;
 using SAIN.Preset.GlobalSettings;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using UnityEngine;
@@ -39,7 +40,7 @@ internal class RushEnemyAction(BotOwner bot) : BotAction(bot, nameof(RushEnemyAc
         checkJumpEnemyInSight();
         if (Bot.Mover.Running)
         {
-            Bot.Mover.ActivePath?.RequestEndSprint(SAINComponent.Classes.Mover.ESprintUrgency.None, "enemy in sight");
+            Bot.Mover.ActivePath?.RequestEndSprint(ESprintUrgency.None, "enemy in sight");
         }
 
         Bot.Mover.DogFight.DogFightMove(true, _enemy);
@@ -139,7 +140,7 @@ internal class RushEnemyAction(BotOwner bot) : BotAction(bot, nameof(RushEnemyAc
         _lastMovePos = lastKnown.Value;
         if (
             pathDistance > BotOwner.Settings.FileSettings.Move.RUN_TO_COVER_MIN
-            && sprintController.RunToPointByWay(enemy.Path.PathToEnemy, true, -1, SAINComponent.Classes.Mover.ESprintUrgency.High, true)
+            && sprintController.RunToPointByWay(enemy.Path.PathToEnemy, true, -1, ESprintUrgency.High, true)
         )
         {
             return true;

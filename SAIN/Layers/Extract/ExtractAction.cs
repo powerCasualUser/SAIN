@@ -5,6 +5,7 @@ using EFT.HealthSystem;
 using EFT.Interactive;
 using SAIN.Components;
 using SAIN.Components.BotController;
+using SAIN.Models.Enums;
 using SAIN.SAINComponent.Classes.Memory;
 using Systems.Effects;
 using UnityEngine;
@@ -120,7 +121,7 @@ internal class ExtractAction(BotOwner bot) : BotAction(bot, "Extract"), IBotActi
 
         if (shallSprint && Bot.Mover.Moving)
         {
-            Bot.Mover.ActivePath.RequestStartSprint(SAINComponent.Classes.Mover.ESprintUrgency.High, "extract");
+            Bot.Mover.ActivePath.RequestStartSprint(ESprintUrgency.High, "extract");
         }
 
         if (shouldStartExtract(distance))

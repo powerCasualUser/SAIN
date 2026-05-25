@@ -1,4 +1,4 @@
-﻿namespace SAIN.SAINComponent.Classes.Mover;
+﻿namespace SAIN.Models.Enums;
 
 public enum ESprintUrgency
 {
