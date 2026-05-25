@@ -174,7 +174,7 @@ public class GameWorldComponent : MonoBehaviour
                 BotComponent Bot = playerComponent?.BotComponent;
                 if (Bot != null && Bot.BotOwner?.BotState == EBotState.Active)
                 {
-                    Bot.Hearing.SoundInput.ProcessAISoundCache();
+                    Bot.Hearing.HearingInput.ProcessAISoundCache();
                 }
             }
         }
@@ -209,7 +209,7 @@ public class GameWorldComponent : MonoBehaviour
                                 continue;
                             }
 
-                            OtherPlayer.BotComponent?.Hearing.SoundInput.CheckAddSoundToCache(soundEvent, Distance);
+                            OtherPlayer.BotComponent?.Hearing.HearingInput.CheckAddSoundToCache(soundEvent, Distance);
                         }
                     }
                 }

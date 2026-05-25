@@ -21,7 +21,7 @@ public static class SAINExternal
             return false;
         }
 
-        bool result = component.Hearing.SoundInput.SetIgnoreHearingExternal(value, ignoreUnderFire, duration, out string reason);
+        bool result = component.Hearing.HearingInput.SetIgnoreHearingExternal(value, ignoreUnderFire, duration, out string reason);
         return result;
     }
 

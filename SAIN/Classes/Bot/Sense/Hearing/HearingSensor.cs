@@ -2,61 +2,62 @@
 using SAIN.Components;
 using SAIN.Components.PlayerComponentSpace;
 using SAIN.Helpers;
+using SAIN.SAINComponent;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using UnityEngine;
 
-namespace SAIN.SAINComponent.Classes;
+namespace SAIN.Classes.Bot.Sense.Hearing;
 
-public class SAINHearingSensorClass : BotComponentClassBase
+public class HearingSensor : BotComponentClassBase
 {
     public event Action<AISoundData, Enemy> OnEnemySoundHeard;
 
-    public HearingInputClass SoundInput { get; }
-    public HearingAnalysisClass Analysis { get; }
-    public HearingDispersionClass Dispersion { get; }
+    public HearingInput HearingInput { get; }
+    public HearingAnalysis HearingAnalysis { get; }
+    public HearingDispersion HearingDispersion { get; }
 
-    public SAINHearingSensorClass(BotComponent sain)
+    public HearingSensor(BotComponent sain)
         : base(sain)
     {
         TickRequirement = ESAINTickState.OnlyNoSleep;
-        SoundInput = new HearingInputClass(this);
-        Analysis = new HearingAnalysisClass(this);
-        Dispersion = new HearingDispersionClass(this);
+        HearingInput = new HearingInput(this);
+        HearingAnalysis = new HearingAnalysis(this);
+        HearingDispersion = new HearingDispersion(this);
     }
 
     public override void Init()
     {
-        SoundInput.Init();
-        Analysis.Init();
-        Dispersion.Init();
+        HearingInput.Init();
+        HearingAnalysis.Init();
+        HearingDispersion.Init();
         base.Init();
     }
 
     public override void ManualUpdate()
     {
-        SoundInput.ManualUpdate();
-        Analysis.ManualUpdate();
-        Dispersion.ManualUpdate();
+        HearingInput.ManualUpdate();
+        HearingAnalysis.ManualUpdate();
+        HearingDispersion.ManualUpdate();
         base.ManualUpdate();
     }
 
     public override void Dispose()
     {
-        SoundInput.Dispose();
-        Analysis.Dispose();
-        Dispersion.Dispose();
+        HearingInput.Dispose();
+        HearingAnalysis.Dispose();
+        HearingDispersion.Dispose();
         base.Dispose();
     }
 
     public void ReactToBulletFlyBy(AISoundData sound, float FlyByDistance)
     {
         bool underFire = FlyByDistance <= SAINPlugin.LoadedPreset.GlobalSettings.Mind.MaxUnderFireDistance;
-        if (SoundInput.IsIgnoringSounds(underFire))
+        if (HearingInput.IsIgnoringSounds(underFire))
         {
             return;
         }
 
-        Vector3 EstimatedPosition = Dispersion.CalcRandomizedPosition(sound, 1f);
+        Vector3 EstimatedPosition = HearingDispersion.CalcRandomizedPosition(sound, 1f);
         ReactToBulletFlyBy(sound, FlyByDistance, EstimatedPosition, underFire);
         OnEnemySoundHeard?.Invoke(sound, sound.Enemy);
     }
@@ -64,15 +65,14 @@ public class SAINHearingSensorClass : BotComponentClassBase
     public void ReactToHeardSound(AISoundData sound)
     {
         Vector3 EstimatedPosition;
-        if (Analysis.CheckIfSoundHeard(sound))
+        if (HearingAnalysis.CheckIfSoundHeard(sound))
         {
             if (sound.IsGunShot && !ShallChaseGunshot(sound.PlayerDistance))
             {
                 return;
             }
-            EstimatedPosition = Dispersion.CalcRandomizedPosition(sound, 1f);
+            EstimatedPosition = HearingDispersion.CalcRandomizedPosition(sound, 1f);
             Bot.Squad.SquadInfo?.AddPointToSearch(sound.Enemy, EstimatedPosition, sound, Bot);
-            CheckCalcGoal();
             OnEnemySoundHeard?.Invoke(sound, sound.Enemy);
         }
     }
@@ -103,18 +103,5 @@ public class SAINHearingSensorClass : BotComponentClassBase
         Bot.Suppression.CheckAddSuppression(enemy, ProjectionPointDistance);
         enemy.Status.RegisterEnemyFlyBy();
         Bot.Squad.SquadInfo?.AddPointToSearch(enemy, EstimatedPosition, sound, Bot);
-        CheckCalcGoal();
-    }
-
-    private void CheckCalcGoal()
-    {
-        //if (BotOwner.Memory.GoalEnemy == null || Bot.GoalEnemy?.IsVisible != true)
-        //{
-        //    try
-        //    {
-        //        BotOwner.BotsGroup.CalcGoalForBot(BotOwner);
-        //    }
-        //    catch { /* Gotta love eft code throwing errors randomly */ }
-        //}
     }
 }

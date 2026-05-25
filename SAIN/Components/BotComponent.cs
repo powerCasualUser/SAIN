@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using EFT;
+using SAIN.Classes.Bot.Sense.Hearing;
 using SAIN.Components.PlayerComponentSpace;
 using SAIN.Layers;
 using SAIN.Models.Enums;
@@ -136,7 +137,7 @@ public class BotComponent : BotComponentBase, ISPlayer
     public SAINVisionClass Vision { get; private set; }
     public SAINMoverClass Mover { get; private set; }
     public SAINBotUnstuckClass BotStuck { get; private set; }
-    public SAINHearingSensorClass Hearing { get; private set; }
+    public HearingSensor Hearing { get; private set; }
     public SAINBotTalkClass Talk { get; private set; }
     public SAINDecisionClass Decision { get; private set; }
     public SAINCoverClass Cover { get; private set; }
@@ -263,7 +264,7 @@ public class BotComponent : BotComponentBase, ISPlayer
             WeightManagement = new BotWeightManagement(this);
             Memory = new SAINMemoryClass(this);
             BotStuck = new SAINBotUnstuckClass(this);
-            Hearing = new SAINHearingSensorClass(this);
+            Hearing = new HearingSensor(this);
             Talk = new SAINBotTalkClass(this);
             Decision = new SAINDecisionClass(this);
             Cover = new SAINCoverClass(this);

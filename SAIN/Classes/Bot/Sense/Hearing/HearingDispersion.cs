@@ -1,40 +1,52 @@
-﻿using System.Collections.Generic;
-using SAIN.Components.PlayerComponentSpace;
+﻿using SAIN.Components.PlayerComponentSpace;
 using SAIN.Helpers;
 using SAIN.Models.PlayerData;
 using SAIN.Preset.GlobalSettings;
+using SAIN.SAINComponent;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using UnityEngine;
 using UnityEngine.AI;
 
-namespace SAIN.SAINComponent.Classes;
+namespace SAIN.Classes.Bot.Sense.Hearing;
 
-public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClass<SAINHearingSensorClass>(hearing), IBotClass
+public class HearingDispersion(HearingSensor hearingSensor) : BotSubClass<HearingSensor>(hearingSensor), IBotClass
 {
     private const float MIN_DISTANCE_LAST_KNOWN_NO_RANDOMIZATION = 3f;
     private const float MAX_DISTANCE_LASTKNOWN_REDUCE_RANDOM = 50;
     private const float MIN_COEF_LASTKNOWN_REDUCE_RANDOM = 0.05f;
 
+    private readonly NavMeshPath _randomNavMeshPath = new();
+
     public Vector3 CalcRandomizedPosition(AISoundData Sound, float addDispersion)
     {
         EnemyPlace enemyLastKnown = Sound.Enemy.KnownPlaces.LastKnownPlace;
-        float distanceFromLastKnown = enemyLastKnown != null ? enemyLastKnown.DistanceToEnemyRealPosition : float.MaxValue;
-
-        if (distanceFromLastKnown <= MIN_DISTANCE_LAST_KNOWN_NO_RANDOMIZATION)
-        {
-            return enemyLastKnown.Position;
-        }
         float lastKnownDistCoef = 1f;
-        if (distanceFromLastKnown < MAX_DISTANCE_LASTKNOWN_REDUCE_RANDOM)
+
+        if (enemyLastKnown != null)
         {
-            float ratio =
-                distanceFromLastKnown
-                - MIN_DISTANCE_LAST_KNOWN_NO_RANDOMIZATION / MAX_DISTANCE_LASTKNOWN_REDUCE_RANDOM
-                - MIN_DISTANCE_LAST_KNOWN_NO_RANDOMIZATION;
-            lastKnownDistCoef = Mathf.Lerp(MIN_COEF_LASTKNOWN_REDUCE_RANDOM, 1f, ratio);
+            float distanceFromLastKnown = enemyLastKnown.DistanceToEnemyRealPosition;
+
+            // If we are close to distance where no randomization takes place, do not randomize
+            if (distanceFromLastKnown <= MIN_DISTANCE_LAST_KNOWN_NO_RANDOMIZATION)
+            {
+                return enemyLastKnown.Position;
+            }
+
+            // The closer to the last known location the lower the last known dispersion will be
+            // The further away the more random it is
+            if (distanceFromLastKnown < MAX_DISTANCE_LASTKNOWN_REDUCE_RANDOM)
+            {
+                float ratio = Mathf.InverseLerp(
+                    MIN_DISTANCE_LAST_KNOWN_NO_RANDOMIZATION,
+                    MAX_DISTANCE_LASTKNOWN_REDUCE_RANDOM,
+                    distanceFromLastKnown
+                );
+
+                lastKnownDistCoef = Mathf.Lerp(MIN_COEF_LASTKNOWN_REDUCE_RANDOM, 1f, ratio);
+            }
         }
-        float baseDispersion = getBaseDispersion(Sound.PlayerDistance, Sound.SoundType);
-        float dispersionMod = getDispersionModifier(Sound.Enemy) * addDispersion;
+        float baseDispersion = GetBaseDispersion(Sound.PlayerDistance, Sound.SoundType);
+        float dispersionMod = GetDispersionModifier(Sound.Enemy) * addDispersion;
         float finalDispersion = baseDispersion * dispersionMod * lastKnownDistCoef;
 
         HearingSettings hearingSettings = GlobalSettingsClass.Instance.Hearing;
@@ -47,7 +59,7 @@ public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClas
             {
                 //DebugGizmos.DrawBox(Sound.HeardPlayer.Position, randomBox * 0.5f, Color.magenta, 10f);
                 var line = DebugGizmos.DrawLine(Vector3.zero, Vector3.forward, Color.magenta, 0.1f, 10f, false);
-                DebugGizmos.SetLinePositions(line, _randomPath.corners);
+                DebugGizmos.SetLinePositions(line, _randomNavMeshPath.corners);
             }
 #endif
             return result;
@@ -82,12 +94,7 @@ public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClas
         int maxTries = 10
     )
     {
-        //for (int i = _preAlocPathList.Count - 1; i < maxTries; i++)
-        //{
-        //    _preAlocPathList.Add(new());
-        //}
         PlayerNavData navData = playerComp.Transform.NavData;
-        Vector3 minSize = size * 0.5f;
         Vector3 origin = navData.Status == EPlayerNavMeshDistance.OffNavMesh ? playerComp.Position : playerComp.Transform.NavData.Position;
         for (int i = 0; i < maxTries; i++)
         {
@@ -123,7 +130,7 @@ public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClas
         return false; // No valid point found
     }
 
-    public static bool GetRandomReachablePointAroundPlayer(
+    public bool GetRandomReachablePointAroundPlayer(
         PlayerComponent playerComp,
         float radius,
         float height,
@@ -132,10 +139,6 @@ public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClas
         int maxTries = 10
     )
     {
-        //for (int i = _preAlocPathList.Count - 1; i < maxTries; i++)
-        //{
-        //    _preAlocPathList.Add(new());
-        //}
         PlayerNavData navData = playerComp.Transform.NavData;
         Vector3 origin = navData.Status == EPlayerNavMeshDistance.OffNavMesh ? playerComp.Position : playerComp.Transform.NavData.Position;
         for (int i = 0; i < maxTries; i++)
@@ -149,16 +152,15 @@ public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClas
 #endif
                 continue; // No valid point found
             }
-            _randomPath ??= new NavMeshPath();
-            _randomPath.ClearCorners();
-            if (!NavMesh.CalculatePath(origin, hit.position, -1, _randomPath))
+            _randomNavMeshPath.ClearCorners();
+            if (!NavMesh.CalculatePath(origin, hit.position, -1, ))
             {
 #if DEBUG
                 Logger.LogDebug($"Failed nav path");
 #endif
                 continue;
             }
-            Vector3[] corners = _randomPath.corners;
+            Vector3[] corners = _randomNavMeshPath.corners;
             int length = corners.Length;
             if (length > 1)
             {
@@ -171,8 +173,6 @@ public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClas
         return false; // No valid point found
     }
 
-    private static NavMeshPath _randomPath;
-
     public static Vector3 RandomPointInBox(Vector3 center, Vector3 size)
     {
         Vector3 halfSize = size * 0.5f;
@@ -184,9 +184,7 @@ public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClas
             ) + center;
     }
 
-    private static readonly List<NavMeshPath> _preAlocPathList = [];
-
-    private float getBaseDispersion(float enemyDistance, SAINSoundType soundType)
+    private float GetBaseDispersion(float enemyDistance, SAINSoundType soundType)
     {
         HearingSettings hearingSettings = GlobalSettingsClass.Instance.Hearing;
         if (hearingSettings.HEAR_DISPERSION_VALUES.TryGetValue(soundType, out float dispersionValue) == false)
@@ -197,7 +195,7 @@ public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClas
         return enemyDistance / dispersionValue;
     }
 
-    private float getDispersionModifier(Enemy Enemy)
+    private float GetDispersionModifier(Enemy Enemy)
     {
         float dotProduct = Vector3.Dot(Bot.LookDirection.normalized, Enemy.EnemyDirectionNormal);
         float scaled = (dotProduct + 1) / 2;
@@ -211,13 +209,5 @@ public class HearingDispersionClass(SAINHearingSensorClass hearing) : BotSubClas
 
         //Logger.LogInfo($"Dispersion Modifier for Sound [{dispersionModifier}] Dot Product [{dotProduct}]");
         return dispersionModifier;
-    }
-
-    private static Vector3 getRandomizedDirection(float dispersion, float xCoef = 1f, float yCoef = 0.25f, float zCoef = 1f)
-    {
-        float randomX = Random.Range(-dispersion * xCoef, dispersion * xCoef);
-        float randomy = Random.Range(-dispersion * yCoef, dispersion * yCoef);
-        float randomZ = Random.Range(-dispersion * zCoef, dispersion * zCoef);
-        return new(randomX, randomy, randomZ);
     }
 }

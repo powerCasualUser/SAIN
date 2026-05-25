@@ -5,12 +5,13 @@ using SAIN.Components;
 using SAIN.Components.PlayerComponentSpace;
 using SAIN.Helpers;
 using SAIN.Models.Structs;
+using SAIN.SAINComponent;
 using SAIN.SAINComponent.Classes.EnemyClasses;
 using UnityEngine;
 
-namespace SAIN.SAINComponent.Classes;
+namespace SAIN.Classes.Bot.Sense.Hearing;
 
-public class HearingInputClass(SAINHearingSensorClass hearing) : BotSubClass<SAINHearingSensorClass>(hearing), IBotClass
+public class HearingInput(HearingSensor hearingSensor) : BotSubClass<HearingSensor>(hearingSensor), IBotClass
 {
     private const float BOT_DEAF_TIME_INTERVAL = 0.75f;
     private const float DeafenCoef_Gunfire = 0.33f;
@@ -36,8 +37,7 @@ public class HearingInputClass(SAINHearingSensorClass hearing) : BotSubClass<SAI
     public override void Init()
     {
         PlayerComponent.OnBulletFlyBy += OnBulletFlyBy;
-        //SAINBotController.Instance.BotHearing.AISoundPlayed += soundHeard;
-        BotManagerComponent.Instance.BotHearing.BulletImpact += bulletImpacted;
+        BotManagerComponent.Instance.BotHearing.BulletImpact += BulletImpacted;
         base.Init();
     }
 
@@ -75,31 +75,38 @@ public class HearingInputClass(SAINHearingSensorClass hearing) : BotSubClass<SAI
         {
             return true;
         }
+
         if (Bot.GameEnding)
         {
             return true;
         }
+
         if (_ignoreHearing && (_ignoreUnderFire || !includingGunfire))
         {
             return true;
         }
+
         return false;
     }
 
     public void CheckAddSoundToCache(SoundEvent Sound, float PlayerDistance)
     {
-        if (Bot.Hearing.SoundInput.IsIgnoringSounds(Sound.SoundType.IsGunShot()))
+        if (Bot.Hearing.HearingInput.IsIgnoringSounds(Sound.SoundType.IsGunShot()))
         {
             return;
         }
+
         if (Bot.EnemyController != null)
         {
             Enemy enemy = Bot.EnemyController.CheckAddEnemy(Sound.GetPlayer());
+
             if (enemy == null && Sound.SoundType != SAINSoundType.Conversation)
             {
                 return;
             }
+
             AISoundData Data = new(Sound, Bot, PlayerDistance, enemy);
+
             switch (Sound.SoundType)
             {
                 case SAINSoundType.Shot:
@@ -304,46 +311,54 @@ public class HearingInputClass(SAINHearingSensorClass hearing) : BotSubClass<SAI
 
     public override void Dispose()
     {
-        //SAINBotController.Instance.BotHearing.AISoundPlayed -= soundHeard;
-        BotManagerComponent.Instance.BotHearing.BulletImpact -= bulletImpacted;
+        BotManagerComponent.Instance.BotHearing.BulletImpact -= BulletImpacted;
         PlayerComponent.OnBulletFlyBy -= OnBulletFlyBy;
         base.Dispose();
     }
 
-    private void bulletImpacted(EftBulletClass bullet)
+    private void BulletImpacted(EftBulletClass bullet)
     {
         if (IsIgnoringSounds(true))
         {
             return;
         }
+
         float currentTime = Time.time;
+
         if (_nextHearImpactTime > currentTime)
         {
             return;
         }
+
         if (Bot.HasEnemy)
         {
             return;
         }
+
         var player = bullet.Player?.iPlayer;
         if (player == null)
         {
             return;
         }
+
         var enemy = Bot.EnemyController.GetEnemy(player.ProfileId, true);
         if (enemy == null)
         {
             return;
         }
-        if (!soundListenerStarted(enemy.EnemyPlayerComponent))
+
+        if (!SoundListenerStarted(enemy.EnemyPlayerComponent))
         {
             return;
         }
+
         if (Bot.PlayerComponent.AIData.PlayerLocation.InBunker != enemy.EnemyPlayerComponent.AIData.PlayerLocation.InBunker)
         {
             return;
         }
+
         float distance = (bullet.CurrentPosition - Bot.Position).sqrMagnitude;
+
         if (distance > IMPACT_MAX_HEAR_DISTANCE)
         {
             _nextHearImpactTime = currentTime + IMPACT_HEAR_FREQUENCY_FAR;
@@ -365,15 +380,17 @@ public class HearingInputClass(SAINHearingSensorClass hearing) : BotSubClass<SAI
             isDanger = distance < 25f * 25f,
             shallReportToSquad = true,
         };
+
         enemy.Hearing.SetHeard(report, currentTime);
     }
 
-    private bool soundListenerStarted(PlayerComponent player)
+    private bool SoundListenerStarted(PlayerComponent player)
     {
         if (!player.IsAI)
         {
             return true;
         }
+
         if (!_hearingStarted)
         {
             if (!PlayerComponent.AIData.AISoundPlayer.SoundMakerStarted)
@@ -382,6 +399,7 @@ public class HearingInputClass(SAINHearingSensorClass hearing) : BotSubClass<SAI
             }
             _hearingStarted = true;
         }
+
         return true;
     }
 
@@ -406,6 +424,7 @@ public class HearingInputClass(SAINHearingSensorClass hearing) : BotSubClass<SAI
 
         _ignoreUnderFire = ignoreUnderFire;
         _ignoreHearing = value;
+
         if (value && duration > 0f)
         {
             _ignoreUntilTime = Time.time + duration;
@@ -414,6 +433,7 @@ public class HearingInputClass(SAINHearingSensorClass hearing) : BotSubClass<SAI
         {
             _ignoreUntilTime = -1f;
         }
+
         reason = string.Empty;
         return true;
     }

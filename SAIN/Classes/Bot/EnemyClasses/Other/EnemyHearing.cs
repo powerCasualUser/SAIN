@@ -60,7 +60,7 @@ public class EnemyHearing(EnemyData enemyData) : EnemyBase(enemyData, enemyData.
 
     public EnemyPlace SetHeard(SAINHearingReport report, float currentTime)
     {
-        if (Bot.Hearing.SoundInput.IsIgnoringSounds(report.soundType.IsGunShot()))
+        if (Bot.Hearing.HearingInput.IsIgnoringSounds(report.soundType.IsGunShot()))
         {
             return null;
         }
